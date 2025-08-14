@@ -186,49 +186,45 @@
 
 {#if game}
 <div class="game-page">
-  <div class="connection-box">
-    <h3>対戦接続</h3>
-    <p class="status">状態: <strong>{connectionStatus}</strong></p>
-    
-    {#if !peer}
-      <button on:click={initializePeer}>{isHost ? '1. 接続コードを生成' : '1. 接続準備'}</button>
-    {:else if !peer.connected}
-      <div class="signal-area">
-        <label for="signal-to-send">【コピー用】あなたの接続コード:</label>
-        <textarea id="signal-to-send" readonly bind:value={signalToSend}></textarea>
-        
-        <label for="received-signal">【貼付用】相手の接続コード:</label>
-        <input type="text" id="received-signal" placeholder="相手から貰ったコードをここに貼り付け" bind:value={receivedSignal}>
-        <button on:click={connectPeer}>2. 接続する</button>
-      </div>
-    {/if}
+  <div class="player-info-area">
+    <div class="player-box" class:active={currentPlayer === 2}>
+      <span>{myPlayerId === 2 ? 'あなた (白)' : '相手 (白)'}</span>
+      <span class="captures">ハマグリ: {game.captures[2]}</span>
+    </div>
+    <div class="player-box" class:active={currentPlayer === 1}>
+      <span>{myPlayerId === 1 ? 'あなた (黒)' : '相手 (黒)'}</span>
+      <span class="captures">ハマグリ: {game.captures[1]}</span>
+    </div>
   </div>
 
-  {#if peer && peer.connected}
-    <div class="player-info-area">
-      <div class="player-box" class:active={currentPlayer === 2}>
-        <span>{myPlayerId === 2 ? 'あなた (白)' : '相手 (白)'}</span>
-        <span class="captures">ハマグリ: {game.captures[2]}</span>
-      </div>
-      <div class="player-box" class:active={currentPlayer === 1}>
-        <span>{myPlayerId === 1 ? 'あなた (黒)' : '相手 (黒)'}</span>
-        <span class="captures">ハマグリ: {game.captures[1]}</span>
-      </div>
+  <div class="game-container" bind:clientWidth={gameContainerWidth}>
+    {#if gameContainerWidth > 0}
+    <div class="game-board-wrapper">
+      <svg width={svgSize} height={svgSize} class="goban-svg">
+        </svg>
     </div>
+    {/if}
+  </div>
+  
+  <div class="action-area">
+    <button class="action-button" on:click={() => handleAction('pass')}>パス</button>
+    <button class="action-button resign" on:click={() => handleAction('resign')}>投了</button>
+  </div>
 
-    <div class="game-container" bind:clientWidth={gameContainerWidth}>
-       </div>
-    
-    <div class="action-area">
-      <button class="action-button" on:click={() => handleAction('pass')}>パス</button>
-      <button class="action-button resign" on:click={() => handleAction('resign')}>投了</button>
-    </div>
-  {:else}
-    <div class="game-placeholder">
-      <p>相手との接続が完了すると、ここに碁盤が表示されます。</p>
+  {#if myPlayerId === 2 && !(peer && peer.connected)}
+    <div class="waiting-overlay">
+      <div class="connection-box">
+        <h3>対戦接続</h3>
+        <p class="status">状態: <strong>{connectionStatus}</strong></p>
+        <p>ホストに接続しています。しばらくお待ちください...</p>
+      </div>
     </div>
   {/if}
-</div>
+  </div>
+{:else}
+  <div class="loading-placeholder">
+    <p>対局を読み込んでいます...</p>
+  </div>
 {/if}
 
 <style>
@@ -250,4 +246,25 @@
   .signal-area button { margin-top: 0.5rem; }
   .game-placeholder { text-align: center; padding: 4rem 1rem; color: #777; }
   /* ...他のスタイルは前回から流用... */
+
+  /* ... 既存のスタイルの下に追加 ... */
+.waiting-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.connection-box {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
 </style>
